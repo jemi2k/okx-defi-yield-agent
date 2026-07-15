@@ -17,8 +17,8 @@ APP_VERSION = "1.0.0"
 APP_DESCRIPTION = "AI-powered DeFi yield optimization agent for OKX.AI"
 
 # X Layer (OKX L2) settings
-XL1_RPC_URL = os.getenv("XL1_RPC_URL", "https://x1-testnet.okx.com")
-XL1_CHAIN_ID = int(os.getenv("XL1_CHAIN_ID", "195"))  # X Layer testnet
+XL1_RPC_URL = os.getenv("XL1_RPC_URL", "https://testrpc.xlayer.tech/terigon")
+XL1_CHAIN_ID = int(os.getenv("XL1_CHAIN_ID", "1952"))  # X Layer testnet
 
 # DeFi protocol addresses (X Layer)
 PROTOCOLS = {
