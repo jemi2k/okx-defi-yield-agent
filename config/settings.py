@@ -45,7 +45,7 @@ PROTOCOLS = {
 # Yield optimizer contract
 YIELD_OPTIMIZER_CONTRACT = os.getenv(
     "YIELD_OPTIMIZER_CONTRACT", 
-    "0x0000000000000000000000000000000000000000"  # Deploy after testing
+    "0xE5B0F5e6F7358a8836574caEB6330DeDAf9E140C"  # Deployed on X Layer Testnet
 )
 
 # Server

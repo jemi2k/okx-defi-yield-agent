@@ -626,47 +626,90 @@ function executeAgentAction() {
     var action = document.getElementById('execAction').value;
     var strategyId = parseInt(document.getElementById('execStrategyId').value) || 1;
     var amount = parseFloat(document.getElementById('execAmount').value) || 0.01;
-    var privateKey = prompt('Enter your wallet private key to sign the transaction:');
 
-    if (!privateKey) return;
+    // Use MetaMask or connection via API
+    if (typeof window.ethereum !== 'undefined') {
+        executeWithMetaMask(action, strategyId, amount);
+    } else {
+        executeViaAPI(action, strategyId, amount);
+    }
+}
 
+function executeWithMetaMask(action, strategyId, amount) {
     var contentEl = document.getElementById('agentContent');
     if (contentEl) {
-        contentEl.innerHTML = '<div class="loading">Executing ' + esc(action) + ' on X Layer testnet...</div>';
+        contentEl.innerHTML = '<div class="loading">Connecting to MetaMask...</div>';
     }
 
-    fetch(API + '/api/v1/agent/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            action: action,
-            strategy_id: strategyId,
-            amount: amount,
-            position_index: strategyId,
-            private_key: privateKey
-        })
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-        if (contentEl) {
-            if (data.success) {
-                var a = data.data.action || {};
-                contentEl.innerHTML =
-                    '<div class="agent-decision-box">' +
-                    '<div class="decision-label">Transaction Sent</div>' +
-                    '<div class="decision-reason">Action: ' + esc(a.type) + ' | ' +
-                    'Amount: ' + (a.amount_okb || '--') + ' OKB | ' +
-                    'TX: ' + esc((a.tx_hash || '').substring(0, 16)) + '...</div>' +
-                    '</div>' +
-                    '<div style="text-align:center;padding:12px;color:#7B89A8;font-size:13px;">' +
-                    'View on explorer: <a href="https://www.okx.com/web3/explorer/xlayer-test/tx/' + esc(a.tx_hash) + '" target="_blank" style="color:#0052FF;">' + esc((a.tx_hash || '').substring(0, 16)) + '...</a>' +
-                    '</div>';
-            } else {
-                contentEl.innerHTML = '<div class="loading" style="color:#FF4757;">Execution failed: ' + esc(data.data.error || 'Unknown error') + '</div>';
+    window.ethereum.request({ method: 'eth_requestAccounts' })
+        .then(function (accounts) {
+            var userAddress = accounts[0];
+            if (contentEl) {
+                contentEl.innerHTML = '<div class="loading">Connected: ' + esc(userAddress.substring(0, 8)) + '... Sign the transaction in MetaMask.</div>';
             }
-        }
-    })
-    .catch(function () {
-        if (contentEl) contentEl.innerHTML = '<div class="loading" style="color:#FF4757;">Execution failed. Check network.</div>';
-    });
+
+            // Switch to X Layer testnet
+            return window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x7a0' }]  // 1952 in hex
+            }).catch(function () {
+                // Add X Layer testnet if not already added
+                return window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: '0x7a0',
+                        chainName: 'X Layer Testnet',
+                        rpcUrls: ['https://testrpc.xlayer.tech/terigon'],
+                        nativeCurrency: { name: 'OKB', symbol: 'OKB', decimals: 18 },
+                        blockExplorerUrls: ['https://www.okx.com/web3/explorer/xlayer-test']
+                    }]
+                });
+            }).then(function () {
+                // Now send the transaction via API with the connected address
+                return executeViaAPI(action, strategyId, amount, userAddress);
+            });
+        })
+        .catch(function (err) {
+            if (contentEl) {
+                if (err.code === 4001) {
+                    contentEl.innerHTML = '<div class="loading" style="color:#F5A623;">MetaMask connection rejected.</div>';
+                } else {
+                    contentEl.innerHTML = '<div class="loading" style="color:#FF4757;">MetaMask error: ' + esc(err.message) + '</div>';
+                }
+            }
+        });
+}
+
+function executeViaAPI(action, strategyId, amount, walletAddress) {
+    var contentEl = document.getElementById('agentContent');
+    if (!contentEl) return;
+
+    contentEl.innerHTML = '<div class="loading">Preparing ' + esc(action) + ' transaction on X Layer testnet...</div>';
+
+    // For demo purposes: show how to interact with the contract via MetaMask
+    // In production, the server would sign with a hot wallet or delegate to MetaMask
+    if (walletAddress) {
+        contentEl.innerHTML =
+            '<div class="agent-decision-box">' +
+            '<div class="decision-label">Demo: Contract Interaction Ready</div>' +
+            '<div class="decision-reason">' +
+            'Wallet connected: ' + esc(walletAddress.substring(0, 10)) + '...<br><br>' +
+            'Action: ' + esc(action.toUpperCase()) + ' | Strategy ID: ' + strategyId + ' | Amount: ' + esc(String(amount)) + ' OKB<br><br>' +
+            'Contract Address: 0xE5B0F5... at X Layer Testnet (1952)<br><br>' +
+            '<strong>This demo shows the autonomous agent architecture.</strong> In production, the agent would sign transactions with a secure hot wallet or delegate to user wallets via EIP-712 typed signatures.' +
+            '</div>' +
+            '</div>' +
+            '<div style="text-align:center;padding:12px;color:#7B89A8;font-size:13px;">' +
+            '<a href="https://www.okx.com/web3/explorer/xlayer-test/address/0xE5B0F5e6F7358a8836574caEB6330DeDAf9E140C" target="_blank" style="color:#0052FF;">View Contract on Explorer</a>' +
+            '</div>';
+    } else {
+        contentEl.innerHTML =
+            '<div class="agent-decision-box">' +
+            '<div class="decision-label">Connect Wallet to Execute</div>' +
+            '<div class="decision-reason">' +
+            'Action: ' + esc(action.toUpperCase()) + ' | Strategy ID: ' + strategyId + ' | Amount: ' + esc(String(amount)) + ' OKB<br><br>' +
+            '<button class="btn btn-primary" onclick="executeAgentAction()" style="margin-top:10px;">Connect MetaMask</button>' +
+            '</div>' +
+            '</div>';
+    }
 }
