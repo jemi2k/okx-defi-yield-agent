@@ -245,10 +245,6 @@ a{{color:#0052FF;text-decoration:none}}
 <h3>Blockchain Integration</h3>
 {"".join(f'<div class="integration"><strong>{b["chain"]}</strong> <span style="color:#7B89A8">Chain ID: {b["chain_id"]}</span> <span style="color:#7B89A8">Contract: {b["contract"]}</span></div>' for b in data['blockchain_integrations'])}
 </div>
-<div class="section">
-<h3>Raw JSON</h3>
-<pre>{pretty}</pre>
-</div>
 <p class="footer"><a href="/">Dashboard</a> &middot; <a href="/docs">API Docs</a> &middot; Built for OKX.AI Genesis Hackathon</p>
 </div></body></html>"""
         return HTMLResponse(html)
