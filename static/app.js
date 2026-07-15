@@ -110,7 +110,6 @@ function loadOpportunities() {
 // ========== MARKET ANALYSIS ==========
 
 function runAnalysis() {
-    // Scroll to analysis section
     var section = document.getElementById('analysisSection');
     if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -152,8 +151,8 @@ function renderAnalysis(data) {
     html += '<div class="metric-box"><div class="metric-label">Sentiment</div><div class="metric-value" style="text-transform:capitalize;">' + (s.market_sentiment || 'neutral') + '</div></div>';
     html += '</div>';
 
-    // AI Analysis
-    html += '<div class="ai-box"><div class="ai-label">AI Analysis</div><div class="ai-text">' + esc(aiText) + '</div></div>';
+    // AI Analysis (rendered as markdown-like HTML)
+    html += '<div class="ai-box"><div class="ai-label">AI Analysis</div><div class="ai-text">' + renderMarkdown(aiText) + '</div></div>';
 
     // Top Recommendations
     if (recs.length > 0) {
@@ -231,9 +230,9 @@ function renderStrategy(data, amount) {
 
     var html = '';
 
-    // AI Strategy text
+    // AI Strategy text (rendered as markdown-like HTML)
     if (ai.ai_strategy) {
-        html += '<div class="ai-box"><div class="ai-label">AI Strategy</div><div class="ai-text">' + esc(ai.ai_strategy) + '</div></div>';
+        html += '<div class="ai-box"><div class="ai-label">AI Strategy</div><div class="ai-text">' + renderMarkdown(ai.ai_strategy) + '</div></div>';
     }
 
     // Allocation table
@@ -300,7 +299,7 @@ function askQuestion() {
             result.innerHTML =
                 '<div class="qa-answer-box">' +
                 '<div class="qa-question">Q: ' + esc(question) + '</div>' +
-                esc(data.data.answer) +
+                renderMarkdown(data.data.answer) +
                 '</div>';
         } else {
             result.innerHTML = '<div class="loading">Could not get answer. Please try again.</div>';
@@ -311,11 +310,137 @@ function askQuestion() {
     });
 }
 
-// ========== UTILS ==========
+// ========== MARKDOWN RENDERER ==========
 
-function setText(id, val) {
-    var el = document.getElementById(id);
-    if (el) el.textContent = val;
+function renderMarkdown(text) {
+    if (!text) return '';
+    var lines = text.split('\n');
+    var html = '';
+    var inTable = false;
+    var inOrderedList = false;
+    var inUnorderedList = false;
+
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var trimmed = line.trim();
+
+        // Empty line - close open structures
+        if (!trimmed) {
+            if (inTable) { html += '</tbody></table>'; inTable = false; }
+            if (inOrderedList) { html += '</ol>'; inOrderedList = false; }
+            if (inUnorderedList) { html += '</ul>'; inUnorderedList = false; }
+            html += '<div style="height:6px;"></div>';
+            continue;
+        }
+
+        // Headings
+        if (trimmed.startsWith('### ')) {
+            closeAll();
+            html += '<h4 style="font-size:15px;font-weight:600;color:#E2E8F0;margin:16px 0 8px;">' + esc(trimmed.slice(4)) + '</h4>';
+            continue;
+        }
+        if (trimmed.startsWith('## ')) {
+            closeAll();
+            html += '<h3 style="font-size:17px;font-weight:700;color:#E2E8F0;margin:20px 0 10px;">' + esc(trimmed.slice(3)) + '</h3>';
+            continue;
+        }
+        if (trimmed.startsWith('# ')) {
+            closeAll();
+            html += '<h2 style="font-size:19px;font-weight:700;color:#E2E8F0;margin:24px 0 12px;">' + esc(trimmed.slice(2)) + '</h2>';
+            continue;
+        }
+
+        // Horizontal rule
+        if (trimmed === '---') {
+            closeAll();
+            html += '<hr style="border:0;border-top:1px solid #1A2440;margin:14px 0;">';
+            continue;
+        }
+
+        // Tables
+        if (trimmed.startsWith('|') && !inTable) {
+            var sep = lines[i + 1] ? lines[i + 1].trim() : '';
+            if (sep && sep.startsWith('|') && sep.indexOf('---') !== -1) {
+                closeAll();
+                inTable = true;
+                var headers = trimmed.split('|').filter(function(c) { return c.trim(); });
+                html += '<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;"><thead><tr>';
+                headers.forEach(function(h) {
+                    html += '<th style="text-align:left;padding:7px 10px;border-bottom:1px solid #1A2440;color:#7B89A8;font-weight:500;text-transform:uppercase;font-size:11px;letter-spacing:0.5px;">' + esc(h.trim()) + '</th>';
+                });
+                html += '</tr></thead><tbody>';
+                i++; // skip separator line
+                continue;
+            }
+        }
+        if (inTable && trimmed.startsWith('|')) {
+            var cells = trimmed.split('|').filter(function(c) { return c.trim(); });
+            html += '<tr>';
+            cells.forEach(function(c) {
+                html += '<td style="padding:7px 10px;border-bottom:1px solid #1A2440;color:#E2E8F0;">' + formatBold(c.trim()) + '</td>';
+            });
+            html += '</tr>';
+            // Check if next line is NOT a table row
+            var next = lines[i + 1] ? lines[i + 1].trim() : '';
+            if (!next || !next.startsWith('|')) {
+                html += '</tbody></table>';
+                inTable = false;
+            }
+            continue;
+        }
+
+        // Ordered lists
+        var olMatch = trimmed.match(/^(\d+)[.)]\s+(.*)/);
+        if (olMatch) {
+            if (inUnorderedList) { html += '</ul>'; inUnorderedList = false; }
+            if (!inOrderedList) { html += '<ol style="margin:6px 0;padding-left:24px;">'; inOrderedList = true; }
+            html += '<li style="margin-bottom:5px;line-height:1.6;">' + formatBold(olMatch[2]) + '</li>';
+            continue;
+        }
+
+        // Unordered lists
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+            var content = trimmed.startsWith('- ') ? trimmed.slice(2) : trimmed.slice(2);
+            if (inOrderedList) { html += '</ol>'; inOrderedList = false; }
+            if (!inUnorderedList) { html += '<ul style="margin:6px 0;padding-left:24px;">'; inUnorderedList = true; }
+            html += '<li style="margin-bottom:5px;line-height:1.6;">' + formatBold(content) + '</li>';
+            continue;
+        }
+
+        // Code blocks
+        if (trimmed.startsWith('```')) {
+            closeAll();
+            html += '<pre style="background:#080C14;border:1px solid #1A2440;border-radius:8px;padding:14px 16px;margin:10px 0;font-size:12px;overflow-x:auto;font-family:monospace;color:#E2E8F0;line-height:1.6;">';
+            var j = i + 1;
+            while (j < lines.length && !lines[j].trim().startsWith('```')) {
+                html += esc(lines[j]) + '\n';
+                j++;
+            }
+            i = j;
+            html += '</pre>';
+            continue;
+        }
+
+        // Regular paragraph
+        if (inOrderedList) { html += '</ol>'; inOrderedList = false; }
+        if (inUnorderedList) { html += '</ul>'; inUnorderedList = false; }
+        html += '<p style="margin:0 0 5px;line-height:1.7;">' + formatBold(trimmed) + '</p>';
+    }
+
+    // Close any remaining open elements
+    closeAll();
+
+    return html;
+
+    function closeAll() {
+        if (inTable) { html += '</tbody></table>'; inTable = false; }
+        if (inOrderedList) { html += '</ol>'; inOrderedList = false; }
+        if (inUnorderedList) { html += '</ul>'; inUnorderedList = false; }
+    }
+}
+
+function formatBold(text) {
+    return esc(text).replace(/\*\*(.*?)\*\*/g, '<strong style="color:#E2E8F0;">$1</strong>');
 }
 
 function esc(str) {
@@ -323,4 +448,9 @@ function esc(str) {
     var div = document.createElement('div');
     div.textContent = String(str);
     return div.innerHTML;
+}
+
+function setText(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
 }

@@ -149,9 +149,9 @@ async def health():
     }
 
 @app.get("/manifest")
-async def manifest():
-    """OKX.AI ASP Manifest - Required for listing"""
-    return {
+async def manifest(request: Request):
+    """OKX.AI ASP Manifest - Shows HTML for browsers, JSON for API"""
+    data = {
         "asp_id": "okx-defi-yield-optimizer",
         "name": APP_NAME,
         "version": APP_VERSION,
@@ -199,6 +199,61 @@ async def manifest():
         ],
         "timestamp": datetime.now().isoformat()
     }
+
+    if _is_browser(request):
+        import json
+        pretty = json.dumps(data, indent=2)
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{APP_NAME} - ASP Manifest</title>
+<style>
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#080C14;color:#E2E8F0;padding:32px 24px}}
+.container{{max-width:800px;margin:0 auto}}
+h1{{font-size:24px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg,#0052FF,#00D67D);-webkit-background-clip:text;-webkit-text-fill-color:transparent}}
+.sub{{color:#7B89A8;font-size:14px;margin-bottom:28px}}
+.section{{background:#0F1525;border:1px solid #1A2440;border-radius:12px;padding:20px;margin-bottom:16px}}
+.section h3{{font-size:14px;font-weight:600;margin-bottom:14px;color:#E2E8F0}}
+.tag{{display:inline-block;padding:4px 10px;background:rgba(0,82,255,0.12);color:#0052FF;border-radius:6px;font-size:12px;margin:0 6px 6px 0}}
+.cap-item{{padding:10px 14px;background:#080C14;border:1px solid #1A2440;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}}
+.cap-item:last-child{{margin-bottom:0}}
+.cap-name{{font-weight:600;font-size:14px}}
+.cap-desc{{font-size:12px;color:#7B89A8;display:block;margin-top:2px}}
+.cap-endpoint{{font-family:monospace;font-size:12px;color:#00D67D;background:rgba(0,214,125,0.08);padding:4px 10px;border-radius:4px}}
+.integration{{display:flex;gap:12px;align-items:center}}
+.integration span{{font-size:13px}}
+pre{{background:#080C14;border:1px solid #1A2440;border-radius:10px;padding:18px;overflow-x:auto;font-size:13px;color:#E2E8F0;line-height:1.6}}
+.footer{{text-align:center;margin-top:32px;font-size:12px;color:#7B89A8}}
+a{{color:#0052FF;text-decoration:none}}
+</style></head>
+<body>
+<div class="container">
+<h1>{APP_NAME}</h1>
+<p class="sub">ASP Manifest - {APP_DESCRIPTION}</p>
+<div class="section">
+<h3>ASP Details</h3>
+<p style="font-size:13px;color:#7B89A8;margin-bottom:12px">ID: <strong style="color:#E2E8F0">{data['asp_id']}</strong> &middot; Author: <strong style="color:#E2E8F0">{data['author']}</strong> &middot; Version: <strong style="color:#E2E8F0">{data['version']}</strong></p>
+<p style="font-size:13px;color:#7B89A8;margin-bottom:12px">Category: <strong style="color:#E2E8F0">{data['category']}</strong> &middot; Pricing: <strong style="color:#00D67D">{data['pricing']['model']}</strong></p>
+{"".join(f'<span class="tag">{t}</span>' for t in data['tags'])}
+</div>
+<div class="section">
+<h3>Capabilities</h3>
+{"".join(f'<div class="cap-item"><div><span class="cap-name">{c["name"]}</span><span class="cap-desc">{c["description"]}</span></div><span class="cap-endpoint">{c["endpoint"]}</span></div>' for c in data['capabilities'])}
+</div>
+<div class="section">
+<h3>Blockchain Integration</h3>
+{"".join(f'<div class="integration"><strong>{b["chain"]}</strong> <span style="color:#7B89A8">Chain ID: {b["chain_id"]}</span> <span style="color:#7B89A8">Contract: {b["contract"]}</span></div>' for b in data['blockchain_integrations'])}
+</div>
+<div class="section">
+<h3>Raw JSON</h3>
+<pre>{pretty}</pre>
+</div>
+<p class="footer"><a href="/">Dashboard</a> &middot; <a href="/docs">API Docs</a> &middot; Built for OKX.AI Genesis Hackathon</p>
+</div></body></html>"""
+        return HTMLResponse(html)
+
+    return data
 
 
 # ========== API Endpoints ==========
