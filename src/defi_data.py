@@ -68,13 +68,14 @@ class DeFiDataFetcher:
         }
 
     async def get_all_yield_opportunities(self) -> List[Dict]:
-        """Get opportunities from agent runtime cache"""
-        from src.main import agent_runtime
-        status = agent_runtime.get_status()
-        strategies = status.get("recommendations", [])
-        if strategies:
-            logger.info("Returning %d cached strategies from agent runtime", len(strategies))
-        return strategies
+        """Get opportunities from known on-chain strategies"""
+        return [
+            {"protocol": "OKX", "name": "OKX Earn Flexible", "apy": 8.5, "min_deposit": 0.01, "risk": "low", "type": "onchain"},
+            {"protocol": "OKX", "name": "OKX Earn 7-Day", "apy": 10.0, "min_deposit": 0.05, "risk": "medium", "type": "onchain"},
+            {"protocol": "OKX", "name": "OKX Earn 30-Day", "apy": 11.7, "min_deposit": 0.1, "risk": "medium", "type": "onchain"},
+            {"protocol": "X Layer DEX", "name": "ETH-USDT LP", "apy": 13.75, "min_deposit": 0.5, "risk": "high", "type": "onchain"},
+            {"protocol": "Stargate Finance", "name": "USDC Bridge Pool", "apy": 10.75, "min_deposit": 0.1, "risk": "medium", "type": "onchain"},
+        ]
 
     async def fetch_market_overview(self) -> Dict[str, Any]:
         return {"market_sentiment": "neutral"}
