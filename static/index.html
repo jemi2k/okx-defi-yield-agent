@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OKX DeFi Yield Optimizer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-icon">O</span>
+                <span class="brand-text">OKX DeFi Yield Optimizer</span>
+            </div>
+            <div class="nav-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Checking...</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>AI-Powered DeFi Yield Optimization</h1>
+            <p>Analyze market conditions, generate personalized strategies, and maximize your yields on X Layer.</p>
+            <div class="hero-actions">
+                <button class="btn btn-primary" onclick="analyzeMarket()">Analyze Market</button>
+                <button class="btn btn-secondary" onclick="showStrategy()">Generate Strategy</button>
+            </div>
+        </section>
+
+        <!-- Stats Grid -->
+        <section class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">Total Opportunities</div>
+                <div class="stat-value" id="totalOpps">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Average APY</div>
+                <div class="stat-value" id="avgApy">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Highest APY</div>
+                <div class="stat-value" id="highestApy">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Market Trend</div>
+                <div class="stat-value" id="marketTrend">--</div>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Opportunities Panel -->
+            <section class="panel" id="opportunitiesPanel">
+                <div class="panel-header">
+                    <h2>Yield Opportunities</h2>
+                    <button class="btn btn-sm" onclick="fetchOpportunities()">Refresh</button>
+                </div>
+                <div class="panel-body" id="opportunitiesBody">
+                    <div class="loading">Loading opportunities...</div>
+                </div>
+            </section>
+
+            <!-- Strategy Panel -->
+            <section class="panel" id="strategyPanel">
+                <div class="panel-header">
+                    <h2>Strategy Generator</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="amount">Investment Amount (USD)</label>
+                        <input type="number" id="amount" value="5000" min="10" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="risk">Risk Tolerance</label>
+                        <select id="risk">
+                            <option value="low">Low - Conservative</option>
+                            <option value="moderate" selected>Moderate - Balanced</option>
+                            <option value="high">High - Aggressive</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="generateStrategy()">Generate Strategy</button>
+                    <div id="strategyResult" class="result-area"></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Analysis Result -->
+        <section class="panel" id="analysisPanel" style="display:none;">
+            <div class="panel-header">
+                <h2>Market Analysis</h2>
+                <button class="btn btn-sm" onclick="closeAnalysis()">Close</button>
+            </div>
+            <div class="panel-body" id="analysisBody"></div>
+        </section>
+
+        <!-- Q&A Section -->
+        <section class="panel qa-panel">
+            <div class="panel-header">
+                <h2>Ask the AI Agent</h2>
+            </div>
+            <div class="panel-body">
+                <div class="qa-input">
+                    <input type="text" id="questionInput" placeholder="Ask about DeFi yields, strategies, or market conditions...">
+                    <button class="btn btn-primary" onclick="askQuestion()">Ask</button>
+                </div>
+                <div id="qaResult" class="result-area"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>OKX DeFi Yield Optimizer Agent | Built for OKX.AI Genesis Hackathon</p>
+            <p class="footer-links">
+                <a href="/docs" target="_blank">API Docs</a>
+                <a href="/manifest" target="_blank">ASP Manifest</a>
+                <a href="https://github.com/jemi2k/okx-defi-yield-agent" target="_blank">GitHub</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

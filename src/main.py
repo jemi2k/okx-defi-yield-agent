@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from config.settings import (
@@ -63,6 +64,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files
+static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+# Serve the dashboard UI
+from fastapi.responses import FileResponse
+dashboard_path = os.path.join(static_dir, "index.html")
+
+@app.get("/ui", include_in_schema=False)
+async def dashboard():
+    """Web dashboard UI"""
+    if os.path.exists(dashboard_path):
+        return FileResponse(dashboard_path)
+    return {"error": "Dashboard not found"}
 
 data_fetcher = DeFiDataFetcher()
 ai_agent = YieldOptimizerAgent()
