@@ -21,55 +21,51 @@
     </nav>
 
     <main class="container">
-        <!-- Hero Section -->
         <section class="hero">
             <h1>AI-Powered DeFi Yield Optimization</h1>
-            <p>Analyze market conditions, generate personalized strategies, and maximize your yields on X Layer.</p>
+            <p>Aggregating real-time yield data, analyzing market conditions, and generating personalized strategies for X Layer.</p>
             <div class="hero-actions">
-                <button class="btn btn-primary" onclick="analyzeMarket()">Analyze Market</button>
-                <button class="btn btn-secondary" onclick="showStrategy()">Generate Strategy</button>
+                <button class="btn btn-primary" id="btnAnalyze">Analyze Market</button>
+                <button class="btn btn-secondary" id="btnStrategy">Generate Strategy</button>
             </div>
         </section>
 
-        <!-- Stats Grid -->
         <section class="stats-grid" id="statsGrid">
             <div class="stat-card">
                 <div class="stat-label">Total Opportunities</div>
-                <div class="stat-value" id="totalOpps">--</div>
+                <div class="stat-value" id="totalOpps">...</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Average APY</div>
-                <div class="stat-value" id="avgApy">--</div>
+                <div class="stat-value" id="avgApy">...</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Highest APY</div>
-                <div class="stat-value" id="highestApy">--</div>
+                <div class="stat-value" id="highestApy">...</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Market Trend</div>
-                <div class="stat-value" id="marketTrend">--</div>
+                <div class="stat-value" id="marketTrend">...</div>
             </div>
         </section>
 
-        <!-- Main Content Grid -->
-        <div class="content-grid">
-            <!-- Opportunities Panel -->
-            <section class="panel" id="opportunitiesPanel">
-                <div class="panel-header">
-                    <h2>Yield Opportunities</h2>
-                    <button class="btn btn-sm" onclick="fetchOpportunities()">Refresh</button>
-                </div>
-                <div class="panel-body" id="opportunitiesBody">
-                    <div class="loading">Loading opportunities...</div>
-                </div>
-            </section>
+        <section class="panel" id="analysisSection">
+            <div class="panel-header">
+                <h2>Market Analysis</h2>
+                <button class="btn btn-sm" id="btnRefreshAnalysis">Refresh</button>
+            </div>
+            <div class="panel-body">
+                <div id="analysisLoading" class="loading">Click "Analyze Market" to get started.</div>
+                <div id="analysisContent" style="display:none;"></div>
+            </div>
+        </section>
 
-            <!-- Strategy Panel -->
-            <section class="panel" id="strategyPanel">
-                <div class="panel-header">
-                    <h2>Strategy Generator</h2>
-                </div>
-                <div class="panel-body">
+        <section class="panel" id="strategySection">
+            <div class="panel-header">
+                <h2>Strategy Generator</h2>
+            </div>
+            <div class="panel-body">
+                <div class="strategy-form-row">
                     <div class="form-group">
                         <label for="amount">Investment Amount (USD)</label>
                         <input type="number" id="amount" value="5000" min="10" step="100">
@@ -82,32 +78,35 @@
                             <option value="high">High - Aggressive</option>
                         </select>
                     </div>
-                    <button class="btn btn-primary btn-full" onclick="generateStrategy()">Generate Strategy</button>
-                    <div id="strategyResult" class="result-area"></div>
+                    <div class="form-group form-action">
+                        <button class="btn btn-primary btn-full" id="btnGenerateStrategy">Generate Strategy</button>
+                    </div>
                 </div>
-            </section>
-        </div>
-
-        <!-- Analysis Result -->
-        <section class="panel" id="analysisPanel" style="display:none;">
-            <div class="panel-header">
-                <h2>Market Analysis</h2>
-                <button class="btn btn-sm" onclick="closeAnalysis()">Close</button>
+                <div id="strategyLoading" style="display:none;" class="loading">Generating personalized strategy...</div>
+                <div id="strategyContent" style="display:none;"></div>
             </div>
-            <div class="panel-body" id="analysisBody"></div>
         </section>
 
-        <!-- Q&A Section -->
-        <section class="panel qa-panel">
+        <section class="panel" id="opportunitiesSection">
             <div class="panel-header">
-                <h2>Ask the AI Agent</h2>
+                <h2>Yield Opportunities</h2>
+                <button class="btn btn-sm" id="btnRefreshOpps">Refresh</button>
+            </div>
+            <div class="panel-body" id="opportunitiesBody">
+                <div class="loading">Loading opportunities...</div>
+            </div>
+        </section>
+
+        <section class="panel" id="qaSection">
+            <div class="panel-header">
+                <h2>Ask the AI</h2>
             </div>
             <div class="panel-body">
-                <div class="qa-input">
+                <div class="qa-input-row">
                     <input type="text" id="questionInput" placeholder="Ask about DeFi yields, strategies, or market conditions...">
-                    <button class="btn btn-primary" onclick="askQuestion()">Ask</button>
+                    <button class="btn btn-primary" id="btnAsk">Ask</button>
                 </div>
-                <div id="qaResult" class="result-area"></div>
+                <div id="qaResult" style="display:none;"></div>
             </div>
         </section>
     </main>
