@@ -156,7 +156,7 @@ async def manifest(request: Request):
         "name": APP_NAME,
         "version": APP_VERSION,
         "description": APP_DESCRIPTION,
-        "author": "HackQuest Builder",
+        "author": "Ermias B. HackQuest Builder",
         "category": "Finance Copilot / Revenue Rocket",
         "tags": ["defi", "yield", "optimization", "ai-agent", "okx-ecosystem"],
         "pricing": {
