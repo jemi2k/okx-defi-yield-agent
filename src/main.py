@@ -22,6 +22,7 @@ from config.settings import (
 )
 from src.defi_data import DeFiDataFetcher
 from src.ai_agent import YieldOptimizerAgent
+from src.agent_runtime import AgentRuntime
 
 # Logging
 logging.basicConfig(
@@ -77,6 +78,9 @@ if os.path.exists(static_dir):
 
 data_fetcher = DeFiDataFetcher()
 ai_agent = YieldOptimizerAgent()
+agent_runtime = AgentRuntime()
+
+logger.info("Agent runtime status: %s", agent_runtime._status)
 
 
 # ========== Helpers ==========
@@ -422,6 +426,60 @@ async def quick_optimize(
         }
     except Exception as e:
         logger.error("Failed to optimize: %s", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ========== Agent Runtime Endpoints ==========
+
+@app.get("/api/v1/agent/scan")
+async def agent_scan():
+    """
+    Trigger the autonomous agent to scan on-chain strategies,
+    analyze market conditions, and make a decision.
+    This is the core agentic behavior.
+    """
+    try:
+        result = await agent_runtime.scan_market()
+        return {"success": True, "data": result}
+    except Exception as e:
+        logger.error("Agent scan failed: %s", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/agent/status")
+async def agent_status():
+    """Get the current agent runtime status"""
+    return {"success": True, "data": agent_runtime.get_status()}
+
+@app.post("/api/v1/agent/execute")
+async def agent_execute(request: Request):
+    """
+    Execute an on-chain action (deposit/withdraw/harvest)
+    using the private key from the request body.
+    """
+    try:
+        body = await request.json()
+        action_type = body.get("action", "")
+        private_key = body.get("private_key", "")
+        strategy_id = body.get("strategy_id", 1)
+        amount = float(body.get("amount", 0.01))
+        position_index = body.get("position_index", 0)
+
+        if not private_key:
+            raise HTTPException(status_code=400, detail="Private key required for execution")
+
+        if action_type == "deposit":
+            result = agent_runtime.execute_deposit(strategy_id, amount, private_key)
+        elif action_type == "withdraw":
+            result = agent_runtime.execute_withdraw(position_index, private_key)
+        elif action_type == "harvest":
+            result = agent_runtime.execute_harvest(position_index, private_key)
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown action: {action_type}")
+
+        return {"success": result.get("success", False), "data": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Agent execution failed: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 

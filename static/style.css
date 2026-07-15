@@ -597,16 +597,124 @@ body {
     text-decoration: underline;
 }
 
+/* Agent Execute Form */
+.agent-execute-row {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.agent-status-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.agent-metric {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+}
+
+.agent-metric .metric-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.agent-metric .metric-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.agent-decision-box {
+    background: linear-gradient(135deg, rgba(0, 82, 255, 0.08), rgba(0, 214, 125, 0.06));
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+}
+
+.agent-decision-box .decision-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.agent-decision-box .decision-reason {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.agent-action-log {
+    margin-top: 14px;
+}
+
+.action-log-item {
+    display: grid;
+    grid-template-columns: 80px 130px 1fr 120px;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+}
+
+.action-log-item .action-type {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.action-type.deposit { color: var(--success); }
+.action-type.withdraw { color: var(--warning); }
+.action-type.harvest { color: var(--primary); }
+.action-type.error { color: var(--danger); }
+
+.action-log-item .action-tx {
+    font-family: monospace;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.action-log-item .action-detail {
+    color: var(--text-muted);
+}
+
+.action-log-item .action-status {
+    text-align: right;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.action-status.success { color: var(--success); }
+.action-status.failed { color: var(--danger); }
+.action-status.error { color: var(--danger); }
+
 /* Responsive */
 @media (max-width: 768px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .strategy-form-row { grid-template-columns: 1fr 1fr; }
+    .agent-status-bar { grid-template-columns: repeat(2, 1fr); }
     .market-overview-grid { grid-template-columns: 1fr; }
     .rec-grid { grid-template-columns: 1fr; }
     .opp-row { grid-template-columns: 1fr 60px; }
     .opp-row .opp-min, .opp-row .opp-badge { display: none; }
     .strategy-summary { flex-direction: column; gap: 10px; }
     .allocation-table { font-size: 11px; }
+    .action-log-item { grid-template-columns: 1fr 1fr; }
     .hero h1 { font-size: 26px; }
     .hero-actions { flex-direction: column; }
 }

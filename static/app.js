@@ -17,6 +17,8 @@ function bindEvents() {
     var el;
 
     // Hero buttons
+    el = document.getElementById('btnScanAgent');
+    if (el) el.addEventListener('click', runAgentScan);
     el = document.getElementById('btnAnalyze');
     if (el) el.addEventListener('click', runAnalysis);
     el = document.getElementById('btnStrategy');
@@ -31,6 +33,12 @@ function bindEvents() {
     if (el) el.addEventListener('click', generateStrategy);
     el = document.getElementById('btnAsk');
     if (el) el.addEventListener('click', askQuestion);
+    el = document.getElementById('btnAgentScan');
+    if (el) el.addEventListener('click', runAgentScan);
+    el = document.getElementById('btnAgentStatus');
+    if (el) el.addEventListener('click', loadAgentStatus);
+    el = document.getElementById('btnExecute');
+    if (el) el.addEventListener('click', executeAgentAction);
 
     // Enter key for Q&A
     el = document.getElementById('questionInput');
@@ -453,4 +461,212 @@ function esc(str) {
 function setText(id, val) {
     var el = document.getElementById(id);
     if (el) el.textContent = val;
+}
+
+// ========== AGENT RUNTIME ==========
+
+function runAgentScan() {
+    var section = document.getElementById('agentSection');
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    var loadingEl = document.getElementById('agentLoading');
+    var contentEl = document.getElementById('agentContent');
+    var formEl = document.getElementById('agentExecuteForm');
+    if (loadingEl) { loadingEl.style.display = 'block'; loadingEl.textContent = 'Agent is scanning X Layer testnet strategies...'; }
+    if (contentEl) contentEl.style.display = 'none';
+    if (formEl) formEl.style.display = 'none';
+
+    fetch(API + '/api/v1/agent/scan')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data.success) throw new Error('API error');
+            renderAgentScan(data.data);
+            // Update stats
+            setText('agentStatusTag', data.data.status);
+            if (data.data.strategies) {
+                setText('totalOpps', data.data.strategy_count);
+                setText('avgApy', data.data.average_apy + '%');
+                if (data.data.best_strategy) {
+                    setText('highestApy', data.data.best_strategy.apy + '%');
+                }
+            }
+        })
+        .catch(function () {
+            if (loadingEl) loadingEl.textContent = 'Agent scan failed. Check network connection.';
+        });
+}
+
+function renderAgentScan(data) {
+    var loadingEl = document.getElementById('agentLoading');
+    var contentEl = document.getElementById('agentContent');
+    var formEl = document.getElementById('agentExecuteForm');
+    if (!loadingEl || !contentEl || !formEl) return;
+    loadingEl.style.display = 'none';
+    contentEl.style.display = 'block';
+
+    var decision = data.agent_decision || {};
+    var strategies = data.strategies || [];
+    var actions = data.actions_log || [];
+    var best = data.best_strategy;
+
+    var html = '';
+
+    // Agent Status Bar
+    html += '<div class="agent-status-bar">';
+    html += '<div class="agent-metric"><div class="metric-label">Status</div><div class="metric-value" style="color:#00D67D;text-transform:uppercase;">' + esc(data.status) + '</div></div>';
+    html += '<div class="agent-metric"><div class="metric-label">Strategies</div><div class="metric-value">' + data.strategy_count + '</div></div>';
+    html += '<div class="agent-metric"><div class="metric-label">Avg APY</div><div class="metric-value">' + data.average_apy + '%</div></div>';
+    html += '<div class="agent-metric"><div class="metric-label">Uptime</div><div class="metric-value">' + data.agent_uptime_minutes + ' min</div></div>';
+    html += '</div>';
+
+    // Agent Decision
+    html += '<div class="agent-decision-box">';
+    html += '<div class="decision-label">Agent Decision: ' + esc(decision.action) + '</div>';
+    html += '<div class="decision-reason">' + esc(decision.reason || 'Monitoring market conditions.') + '</div>';
+    html += '</div>';
+
+    // On-chain Strategies
+    if (strategies.length > 0) {
+        html += '<div style="margin-bottom:8px;font-size:12px;color:#7B89A8;text-transform:uppercase;letter-spacing:0.6px;">On-Chain Strategies</div>';
+        html += '<table class="allocation-table">';
+        html += '<thead><tr><th>Name</th><th>Protocol</th><th>APY</th><th>TVL (OKB)</th><th>Risk</th></tr></thead><tbody>';
+        strategies.forEach(function (s) {
+            var highlight = best && s.id === best.id ? ' style="border-left:3px solid #00D67D;padding-left:10px;"' : '';
+            html += '<tr' + highlight + '>' +
+                '<td>' + esc(s.name) + '</td>' +
+                '<td>' + esc(s.protocol) + '</td>' +
+                '<td class="apy-cell">' + s.apy + '%</td>' +
+                '<td>' + s.total_deposits_okb + '</td>' +
+                '<td><span class="rec-risk risk-' + (s.risk || 'medium') + '">' + s.risk + '</span></td>' +
+                '</tr>';
+        });
+        html += '</tbody></table>';
+    }
+
+    // Action Log
+    if (actions.length > 0) {
+        html += '<div style="margin-top:14px;margin-bottom:8px;font-size:12px;color:#7B89A8;text-transform:uppercase;letter-spacing:0.6px;">Recent Actions</div>';
+        html += '<div class="agent-action-log">';
+        actions.forEach(function (a) {
+            var statusClass = a.status === 'success' ? 'success' : (a.status === 'failed' ? 'failed' : 'error');
+            html += '<div class="action-log-item">' +
+                '<div class="action-type ' + esc(a.type) + '">' + esc(a.type) + '</div>' +
+                '<div class="action-tx">' + esc((a.tx_hash || '').substring(0, 10)) + '...</div>' +
+                '<div class="action-detail">' + esc(a.amount_okb ? a.amount_okb + ' OKB' : (a.timestamp || '')) + '</div>' +
+                '<div class="action-status ' + statusClass + '">' + esc(a.status) + '</div>' +
+                '</div>';
+        });
+        html += '</div>';
+    }
+
+    contentEl.innerHTML = html;
+
+    // Show execute form
+    formEl.style.display = 'block';
+}
+
+function loadAgentStatus() {
+    var section = document.getElementById('agentSection');
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    var loadingEl = document.getElementById('agentLoading');
+    var contentEl = document.getElementById('agentContent');
+    if (loadingEl) { loadingEl.style.display = 'block'; loadingEl.textContent = 'Loading agent status...'; }
+    if (contentEl) contentEl.style.display = 'none';
+
+    fetch(API + '/api/v1/agent/status')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data.success) throw new Error('API error');
+            renderAgentStatus(data.data);
+        })
+        .catch(function () {
+            if (loadingEl) loadingEl.textContent = 'Failed to load status.';
+        });
+}
+
+function renderAgentStatus(data) {
+    var loadingEl = document.getElementById('agentLoading');
+    var contentEl = document.getElementById('agentContent');
+    var formEl = document.getElementById('agentExecuteForm');
+    if (!loadingEl || !contentEl || !formEl) return;
+    loadingEl.style.display = 'none';
+    contentEl.style.display = 'block';
+
+    setText('agentStatusTag', data.agent_status);
+
+    var html = '';
+    html += '<div class="agent-status-bar">';
+    html += '<div class="agent-metric"><div class="metric-label">Status</div><div class="metric-value" style="color:#00D67D;text-transform:uppercase;">' + esc(data.agent_status) + '</div></div>';
+    html += '<div class="agent-metric"><div class="metric-label">Chain</div><div class="metric-value">' + esc(data.chain) + '</div></div>';
+    html += '<div class="agent-metric"><div class="metric-label">Uptime</div><div class="metric-value">' + data.uptime_minutes + ' min</div></div>';
+    html += '<div class="agent-metric"><div class="metric-label">Actions</div><div class="metric-value">' + data.actions_count + '</div></div>';
+    html += '</div>';
+
+    if (data.recent_actions && data.recent_actions.length > 0) {
+        html += '<div style="margin-bottom:8px;font-size:12px;color:#7B89A8;text-transform:uppercase;letter-spacing:0.6px;">Recent Actions</div>';
+        html += '<div class="agent-action-log">';
+        data.recent_actions.forEach(function (a) {
+            var statusClass = a.status === 'success' ? 'success' : (a.status === 'failed' ? 'failed' : 'error');
+            html += '<div class="action-log-item">' +
+                '<div class="action-type ' + esc(a.type) + '">' + esc(a.type) + '</div>' +
+                '<div class="action-tx">' + esc((a.tx_hash || '').substring(0, 10)) + '...</div>' +
+                '<div class="action-detail">' + esc(a.amount_okb ? a.amount_okb + ' OKB' : (a.timestamp || '')) + '</div>' +
+                '<div class="action-status ' + statusClass + '">' + esc(a.status) + '</div>' +
+                '</div>';
+        });
+        html += '</div>';
+    }
+
+    contentEl.innerHTML = html;
+    formEl.style.display = 'block';
+}
+
+function executeAgentAction() {
+    var action = document.getElementById('execAction').value;
+    var strategyId = parseInt(document.getElementById('execStrategyId').value) || 1;
+    var amount = parseFloat(document.getElementById('execAmount').value) || 0.01;
+    var privateKey = prompt('Enter your wallet private key to sign the transaction:');
+
+    if (!privateKey) return;
+
+    var contentEl = document.getElementById('agentContent');
+    if (contentEl) {
+        contentEl.innerHTML = '<div class="loading">Executing ' + esc(action) + ' on X Layer testnet...</div>';
+    }
+
+    fetch(API + '/api/v1/agent/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: action,
+            strategy_id: strategyId,
+            amount: amount,
+            position_index: strategyId,
+            private_key: privateKey
+        })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+        if (contentEl) {
+            if (data.success) {
+                var a = data.data.action || {};
+                contentEl.innerHTML =
+                    '<div class="agent-decision-box">' +
+                    '<div class="decision-label">Transaction Sent</div>' +
+                    '<div class="decision-reason">Action: ' + esc(a.type) + ' | ' +
+                    'Amount: ' + (a.amount_okb || '--') + ' OKB | ' +
+                    'TX: ' + esc((a.tx_hash || '').substring(0, 16)) + '...</div>' +
+                    '</div>' +
+                    '<div style="text-align:center;padding:12px;color:#7B89A8;font-size:13px;">' +
+                    'View on explorer: <a href="https://www.okx.com/web3/explorer/xlayer-test/tx/' + esc(a.tx_hash) + '" target="_blank" style="color:#0052FF;">' + esc((a.tx_hash || '').substring(0, 16)) + '...</a>' +
+                    '</div>';
+            } else {
+                contentEl.innerHTML = '<div class="loading" style="color:#FF4757;">Execution failed: ' + esc(data.data.error || 'Unknown error') + '</div>';
+            }
+        }
+    })
+    .catch(function () {
+        if (contentEl) contentEl.innerHTML = '<div class="loading" style="color:#FF4757;">Execution failed. Check network.</div>';
+    });
 }

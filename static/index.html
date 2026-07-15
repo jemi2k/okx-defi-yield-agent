@@ -25,8 +25,8 @@
             <h1>AI-Powered DeFi Yield Optimization</h1>
             <p>Aggregating real-time yield data, analyzing market conditions, and generating personalized strategies for X Layer.</p>
             <div class="hero-actions">
-                <button class="btn btn-primary" id="btnAnalyze">Analyze Market</button>
-                <button class="btn btn-secondary" id="btnStrategy">Generate Strategy</button>
+                <button class="btn btn-primary" id="btnScanAgent">Run Agent Scan</button>
+                <button class="btn btn-secondary" id="btnAnalyze">Analyze Market</button>
             </div>
         </section>
 
@@ -44,8 +44,46 @@
                 <div class="stat-value" id="highestApy">...</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Market Trend</div>
-                <div class="stat-value" id="marketTrend">...</div>
+                <div class="stat-label">Agent Status</div>
+                <div class="stat-value" id="agentStatusTag">...</div>
+            </div>
+        </section>
+
+        <section class="panel" id="agentSection">
+            <div class="panel-header">
+                <h2>Autonomous Agent Runtime</h2>
+                <div>
+                    <button class="btn btn-sm" id="btnAgentStatus">Status</button>
+                    <button class="btn btn-sm" id="btnAgentScan" style="margin-left:6px;">Scan</button>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div id="agentLoading" class="loading">Click "Run Agent Scan" or "Status" to interact with the autonomous agent.</div>
+                <div id="agentContent" style="display:none;"></div>
+                <div class="agent-execute-row" id="agentExecuteForm" style="display:none;">
+                    <h4 style="font-size:13px;margin-bottom:10px;color:#E2E8F0;">Execute On-Chain Action</h4>
+                    <div class="strategy-form-row">
+                        <div class="form-group">
+                            <label>Action</label>
+                            <select id="execAction">
+                                <option value="deposit">Deposit</option>
+                                <option value="withdraw">Withdraw</option>
+                                <option value="harvest">Harvest</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Strategy / Position ID</label>
+                            <input type="number" id="execStrategyId" value="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (OKB)</label>
+                            <input type="number" id="execAmount" value="0.01" min="0.001" step="0.001">
+                        </div>
+                        <div class="form-group form-action">
+                            <button class="btn btn-primary btn-full" id="btnExecute">Execute</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
