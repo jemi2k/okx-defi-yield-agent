@@ -191,10 +191,12 @@ async def manifest(request: Request):
         ],
         "blockchain_integrations": [
             {
-                "chain": "X Layer (OKX L2)",
-                "chain_id": 195,
+                "chain": "X Layer Testnet",
+                "chain_id": 1952,
+                "contract_address": "0xE5B0F5e6F7358a8836574caEB6330DeDAf9E140C",
                 "contract": "YieldOptimizer.sol",
-                "features": ["deposit", "withdraw", "harvest", "strategy-management"]
+                "features": ["deposit", "withdraw", "harvest", "strategy-management", "yield-optimization"],
+                "explorer": "https://www.okx.com/web3/explorer/xlayer-test/address/0xE5B0F5e6F7358a8836574caEB6330DeDAf9E140C"
             }
         ],
         "timestamp": datetime.now().isoformat()
