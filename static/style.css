@@ -597,6 +597,82 @@ body {
     text-decoration: underline;
 }
 
+/* Connect Section */
+.connect-hero {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    text-align: center;
+}
+
+.connect-card {
+    max-width: 520px;
+    padding: 48px 32px;
+}
+
+.connect-card h1 {
+    font-size: 32px;
+    font-weight: 700;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+}
+
+.connect-card p {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    line-height: 1.7;
+}
+
+.btn-lg {
+    padding: 15px 36px;
+    font-size: 16px;
+    border-radius: 12px;
+}
+
+.hint {
+    margin-top: 16px;
+    font-size: 12px;
+    color: #4A5570;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* Agent Pulse */
+.agent-pulse {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.agent-pulse.active {
+    background: var(--success);
+    animation: pulse 2s infinite;
+}
+
+.agent-pulse.scanning {
+    background: var(--warning);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 214, 125, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(0, 214, 125, 0); }
+}
+
 /* Agent Execute Form */
 .agent-execute-row {
     margin-top: 18px;

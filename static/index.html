@@ -13,151 +13,120 @@
                 <span class="brand-icon">O</span>
                 <span class="brand-text">OKX DeFi Yield Optimizer</span>
             </div>
-            <div class="nav-status">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">Checking...</span>
+            <div class="nav-actions" id="navActions">
+                <button class="btn btn-primary" id="btnConnectWallet" onclick="connectWallet()">Connect Wallet</button>
+                <div id="walletInfo" style="display:none;">
+                    <span id="walletAddress">0x...</span>
+                    <span id="walletBalance" style="margin-left:10px;"></span>
+                </div>
             </div>
         </div>
     </nav>
 
     <main class="container">
-        <section class="hero">
-            <h1>AI-Powered DeFi Yield Optimization</h1>
-            <p>Aggregating real-time yield data, analyzing market conditions, and generating personalized strategies for X Layer.</p>
-            <div class="hero-actions">
-                <button class="btn btn-primary" id="btnScanAgent">Run Agent Scan</button>
-                <button class="btn btn-secondary" id="btnAnalyze">Analyze Market</button>
+        <!-- Connect Section -->
+        <section id="connectSection" class="connect-hero">
+            <div class="connect-card">
+                <h1>AI-Powered DeFi Yield Optimization</h1>
+                <p>Connect your wallet to let the autonomous agent analyze live X Layer strategies and optimize your yields.</p>
+                <button class="btn btn-primary btn-lg" onclick="connectWallet()">Connect Wallet to Begin</button>
+                <p class="hint">X Layer Testnet (Chain 1952) · MetaMask Required</p>
             </div>
         </section>
 
-        <section class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-                <div class="stat-label">Total Opportunities</div>
-                <div class="stat-value" id="totalOpps">...</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Average APY</div>
-                <div class="stat-value" id="avgApy">...</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Highest APY</div>
-                <div class="stat-value" id="highestApy">...</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Agent Status</div>
-                <div class="stat-value" id="agentStatusTag">...</div>
-            </div>
-        </section>
+        <!-- Dashboard Section (hidden until connected) -->
+        <div id="dashboardSection" style="display:none;">
 
-        <section class="panel" id="agentSection">
-            <div class="panel-header">
-                <h2>Autonomous Agent Runtime</h2>
-                <div>
-                    <button class="btn btn-sm" id="btnAgentStatus">Status</button>
-                    <button class="btn btn-sm" id="btnAgentScan" style="margin-left:6px;">Scan</button>
+            <!-- Stats -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Wallet Balance</div>
+                    <div class="stat-value" id="statBalance">0.00 OKB</div>
                 </div>
-            </div>
-            <div class="panel-body">
-                <div id="agentLoading" class="loading">Click "Run Agent Scan" or "Status" to interact with the autonomous agent.</div>
-                <div id="agentContent" style="display:none;"></div>
-                <div class="agent-execute-row" id="agentExecuteForm" style="display:none;">
-                    <h4 style="font-size:13px;margin-bottom:10px;color:#E2E8F0;">Execute On-Chain Action</h4>
+                <div class="stat-card">
+                    <div class="stat-label">Active Strategies</div>
+                    <div class="stat-value" id="statStrategies">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Highest APY</div>
+                    <div class="stat-value" id="statBestApy">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Agent Status</div>
+                    <div class="stat-value" id="statAgent">Idle</div>
+                </div>
+            </section>
+
+            <!-- Autonomous Agent -->
+            <section class="panel">
+                <div class="panel-header">
+                    <h2>Autonomous Agent Runtime</h2>
+                    <div>
+                        <span class="agent-pulse" id="agentPulse"></span>
+                        <span id="agentStatusLabel">Idle</span>
+                        <button class="btn btn-primary" id="btnScan" style="margin-left:12px;" onclick="runAgentScan()">Run Agent Scan</button>
+                    </div>
+                </div>
+                <div class="panel-body" id="agentBody">
+                    <div class="loading">Agent waiting for wallet connection. Click "Run Agent Scan" to begin.</div>
+                </div>
+            </section>
+
+            <!-- Strategy Generator -->
+            <section class="panel">
+                <div class="panel-header">
+                    <h2>Strategy Generator</h2>
+                </div>
+                <div class="panel-body">
                     <div class="strategy-form-row">
                         <div class="form-group">
-                            <label>Action</label>
-                            <select id="execAction">
-                                <option value="deposit">Deposit</option>
-                                <option value="withdraw">Withdraw</option>
-                                <option value="harvest">Harvest</option>
+                            <label>Investment Amount (USD)</label>
+                            <input type="number" id="amount" value="5000" min="10" step="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Risk Tolerance</label>
+                            <select id="risk">
+                                <option value="low">Conservative</option>
+                                <option value="moderate" selected>Balanced</option>
+                                <option value="high">Aggressive</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>Strategy / Position ID</label>
-                            <input type="number" id="execStrategyId" value="1" min="1">
-                        </div>
-                        <div class="form-group">
-                            <label>Amount (OKB)</label>
-                            <input type="number" id="execAmount" value="0.01" min="0.001" step="0.001">
-                        </div>
                         <div class="form-group form-action">
-                            <button class="btn btn-primary btn-full" id="btnExecute">Execute</button>
+                            <button class="btn btn-primary btn-full" id="btnGenerate" onclick="generateStrategy()">Generate Strategy</button>
                         </div>
                     </div>
+                    <div id="strategyResult" style="display:none;"></div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="panel" id="analysisSection">
-            <div class="panel-header">
-                <h2>Market Analysis</h2>
-                <button class="btn btn-sm" id="btnRefreshAnalysis">Refresh</button>
-            </div>
-            <div class="panel-body">
-                <div id="analysisLoading" class="loading">Click "Analyze Market" to get started.</div>
-                <div id="analysisContent" style="display:none;"></div>
-            </div>
-        </section>
-
-        <section class="panel" id="strategySection">
-            <div class="panel-header">
-                <h2>Strategy Generator</h2>
-            </div>
-            <div class="panel-body">
-                <div class="strategy-form-row">
-                    <div class="form-group">
-                        <label for="amount">Investment Amount (USD)</label>
-                        <input type="number" id="amount" value="5000" min="10" step="100">
-                    </div>
-                    <div class="form-group">
-                        <label for="risk">Risk Tolerance</label>
-                        <select id="risk">
-                            <option value="low">Low - Conservative</option>
-                            <option value="moderate" selected>Moderate - Balanced</option>
-                            <option value="high">High - Aggressive</option>
-                        </select>
-                    </div>
-                    <div class="form-group form-action">
-                        <button class="btn btn-primary btn-full" id="btnGenerateStrategy">Generate Strategy</button>
-                    </div>
+            <!-- Market Analysis -->
+            <section class="panel">
+                <div class="panel-header">
+                    <h2>DeepSeek AI Market Analysis</h2>
+                    <button class="btn btn-sm" onclick="runAnalysis()">Refresh</button>
                 </div>
-                <div id="strategyLoading" style="display:none;" class="loading">Generating personalized strategy...</div>
-                <div id="strategyContent" style="display:none;"></div>
-            </div>
-        </section>
-
-        <section class="panel" id="opportunitiesSection">
-            <div class="panel-header">
-                <h2>Yield Opportunities</h2>
-                <button class="btn btn-sm" id="btnRefreshOpps">Refresh</button>
-            </div>
-            <div class="panel-body" id="opportunitiesBody">
-                <div class="loading">Loading opportunities...</div>
-            </div>
-        </section>
-
-        <section class="panel" id="qaSection">
-            <div class="panel-header">
-                <h2>Ask the AI</h2>
-            </div>
-            <div class="panel-body">
-                <div class="qa-input-row">
-                    <input type="text" id="questionInput" placeholder="Ask about DeFi yields, strategies, or market conditions...">
-                    <button class="btn btn-primary" id="btnAsk">Ask</button>
+                <div class="panel-body">
+                    <div id="analysisLoading" class="loading">Click "Refresh" for AI market analysis.</div>
+                    <div id="analysisContent" style="display:none;"></div>
                 </div>
-                <div id="qaResult" style="display:none;"></div>
-            </div>
-        </section>
+            </section>
+
+            <!-- Footer -->
+            <section class="panel">
+                <div class="panel-header"><h2>Deployed Contract</h2></div>
+                <div class="panel-body">
+                    <p style="font-size:13px;color:#7B89A8;">
+                        YieldOptimizer.sol:<br>
+                        <a href="https://www.okx.com/web3/explorer/xlayer-test/address/0xE5B0F5e6F7358a8836574caEB6330DeDAf9E140C" target="_blank" style="color:#0052FF;font-family:monospace;">0xE5B0F5e6F7358a8836574caEB6330DeDAf9E140C</a><br>
+                        X Layer Testnet · Chain ID 1952
+                    </p>
+                </div>
+            </section>
+        </div>
     </main>
 
     <footer class="footer">
-        <div class="footer-content">
-            <p>OKX DeFi Yield Optimizer Agent | Built for OKX.AI Genesis Hackathon</p>
-            <p class="footer-links">
-                <a href="/docs" target="_blank">API Docs</a>
-                <a href="/manifest" target="_blank">ASP Manifest</a>
-                <a href="https://github.com/jemi2k/okx-defi-yield-agent" target="_blank">GitHub</a>
-            </p>
-        </div>
+        <p>OKX DeFi Yield Optimizer Agent · Built for OKX.AI Genesis Hackathon · <a href="https://github.com/jemi2k/okx-defi-yield-agent">GitHub</a></p>
     </footer>
 
     <script src="/static/app.js"></script>
