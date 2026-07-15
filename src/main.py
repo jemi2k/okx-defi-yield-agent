@@ -10,8 +10,9 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -65,24 +66,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Directories
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+static_dir = os.path.join(BASE_DIR, "static")
+dashboard_path = os.path.join(static_dir, "index.html")
+
 # Mount static files
-static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-# Serve the dashboard UI
-from fastapi.responses import FileResponse
-dashboard_path = os.path.join(static_dir, "index.html")
-
-@app.get("/ui", include_in_schema=False)
-async def dashboard():
-    """Web dashboard UI"""
-    if os.path.exists(dashboard_path):
-        return FileResponse(dashboard_path)
-    return {"error": "Dashboard not found"}
-
 data_fetcher = DeFiDataFetcher()
 ai_agent = YieldOptimizerAgent()
+
+
+# ========== Helpers ==========
+
+def _is_browser(request: Request) -> bool:
+    """Check if request is from a browser (wants HTML)"""
+    accept = request.headers.get("accept", "")
+    return "text/html" in accept
 
 
 # ========== Lifecycle Events ==========
@@ -98,11 +100,14 @@ async def shutdown():
     logger.info("Shutting down...")
 
 
-# ========== Health & Info Endpoints ==========
+# ========== Root Endpoint: Serves UI for browsers, JSON for API ==========
 
-@app.get("/")
-async def root():
-    """Root endpoint - ASP info for OKX.AI"""
+@app.get("/", include_in_schema=False)
+async def root(request: Request):
+    """Root endpoint: Serves dashboard for browsers, ASP info for API clients"""
+    if _is_browser(request) and os.path.exists(dashboard_path):
+        return FileResponse(dashboard_path)
+    # API client - return ASP info
     return {
         "name": APP_NAME,
         "version": APP_VERSION,
@@ -116,9 +121,22 @@ async def root():
             "Market intelligence",
             "Strategy automation"
         ],
+        "interactive_dashboard": "/dashboard",
+        "api_docs": "/docs",
+        "asp_manifest": "/manifest",
         "status": "active",
         "timestamp": datetime.now().isoformat()
     }
+
+@app.get("/dashboard", include_in_schema=False)
+async def dashboard():
+    """Interactive web dashboard"""
+    if os.path.exists(dashboard_path):
+        return FileResponse(dashboard_path)
+    return HTMLResponse("<h1>Dashboard not found</h1>", status_code=404)
+
+
+# ========== Health & Info Endpoints ==========
 
 @app.get("/health")
 async def health():
@@ -355,8 +373,8 @@ async def quick_optimize(
 if __name__ == "__main__":
     import uvicorn
     logger.info("Starting %s v%s", APP_NAME, APP_VERSION)
+    logger.info("Dashboard: http://%s:%s/", HOST, PORT)
     logger.info("API Docs: http://%s:%s/docs", HOST, PORT)
-    logger.info("ASP Manifest: http://%s:%s/manifest", HOST, PORT)
     uvicorn.run(
         "src.main:app",
         host=HOST,

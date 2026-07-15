@@ -8,9 +8,6 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Don't import web3 here - it has broken pytest integration
-# The main application imports web3 only when deploying, not at startup
-
 from src.main import app
 
 
@@ -32,13 +29,14 @@ async def test_health_endpoint(client):
 
 
 @pytest.mark.asyncio
-async def test_root_endpoint(client):
-    """Test root endpoint"""
-    response = await client.get("/")
+async def test_root_endpoint_json(client):
+    """Test root endpoint returns JSON for API clients"""
+    response = await client.get("/", headers={"Accept": "application/json"})
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "OKX DeFi Yield Optimizer"
     assert data["type"] == "Agent Service Provider (ASP)"
+    assert "interactive_dashboard" in data
 
 
 @pytest.mark.asyncio
@@ -152,3 +150,11 @@ async def test_invalid_amount(client):
     """Test with invalid amount"""
     response = await client.get("/api/v1/optimize?amount=5")
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_dashboard_endpoint(client):
+    """Test dashboard endpoint"""
+    response = await client.get("/dashboard")
+    assert response.status_code == 200
+    assert "text/html" in response.headers.get("content-type", "")
